@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = import.meta.env.VITE_API_URL || 'https://bfhl-backend-delta-roan.vercel.app'
 
 /* Theme helpers*/
 const THEME_OPTIONS = [

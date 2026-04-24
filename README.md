@@ -1,38 +1,26 @@
 # BFHL Node Analyzer
 
-A full-stack tool for analyzing hierarchical node relationships and detecting cycles in directed graphs.
-
-**Stack:** Node.js + Express (backend) · React + Vite (frontend) · Pure CSS
-
----
-
-## Project Structure
-
-```
-/
-├── backend/
-│   ├── index.js        # Express API — all logic lives here
-│   ├── package.json
-│   └── render.yaml     # Render deployment config
-├── frontend/
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   ├── .env.example
-│   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       └── App.css
-├── .gitignore
-└── README.md
-```
+**Live Demo:** https://bfhl-node-analyzer-six.vercel.app
+**API Endpoint:** https://bfhl-backend-delta-roan.vercel.app/bfhl
 
 ---
 
-## Running Locally
+## What it does
+Analyzes directed graph edges, detects hierarchical trees and cycles,
+and returns structured JSON with tree depth, cycle detection, and summary stats.
+
+---
+
+## Tech Stack
+- **Backend:** Node.js + Express — deployed on Vercel
+- **Frontend:** React + Vite — deployed on Vercel
+- **Styling:** Pure CSS, zero UI libraries
+
+---
+
+## Run Locally
 
 ### Backend
-
 ```bash
 cd backend
 npm install
@@ -41,7 +29,6 @@ npm start
 ```
 
 ### Frontend
-
 ```bash
 cd frontend
 npm install
@@ -49,56 +36,27 @@ npm run dev
 # Runs on http://localhost:5173
 ```
 
-The frontend reads the API URL from `VITE_API_URL` (defaults to `http://localhost:3001` if not set).
+Create `frontend/.env` with:
+VITE_API_URL=http://localhost:3001
+
+text
 
 ---
 
-## Deployment
+## API
 
-### Backend → Render
+### GET /
+Health check — returns `{ "status": "ok" }`
 
-1. Push this repo to GitHub.
-2. Create a new **Web Service** on [render.com](https://render.com).
-3. Connect your repository.
-4. Set **Root Directory** to `backend`.
-5. Build command: `npm install` · Start command: `node index.js`.
-6. Render will read `render.yaml` automatically.
-
-### Frontend → Vercel
-
-1. Create a new project on [vercel.com](https://vercel.com).
-2. Connect your repository.
-3. Set **Root Directory** to `frontend`.
-4. Add environment variable: `VITE_API_URL = https://your-render-url.onrender.com`
-5. Deploy.
-
----
-
-## API Reference
-
-### `GET /`
-
-Health check.
-
-**Response:**
-```json
-{ "status": "ok" }
-```
-
----
-
-### `POST /bfhl`
-
-Analyzes a list of directed edges.
-
-**Request body:**
+### POST /bfhl
+**Request:**
 ```json
 {
-  "edges": ["A->B", "A->C", "B->D", "X->Y", "Y->Z", "Z->X"]
+  "data": ["A->B", "A->C", "B->D", "X->Y", "Y->Z", "Z->X"]
 }
 ```
 
-**Example response:**
+**Response:**
 ```json
 {
   "user_id": "jainishjain_11012005",
@@ -107,7 +65,7 @@ Analyzes a list of directed edges.
   "hierarchies": [
     {
       "root": "A",
-      "tree": { "B": { "D": {} }, "C": {} },
+      "tree": { "A": { "B": { "D": {} }, "C": {} } },
       "depth": 3
     },
     {
@@ -126,11 +84,21 @@ Analyzes a list of directed edges.
 }
 ```
 
-**Validation rules applied:**
-- Entries are trimmed before validation.
-- Valid format: `^[A-Z]->[A-Z]$` (single uppercase letters, `->` separator).
-- Self-loops (e.g. `A->A`) are invalid.
-- Duplicate edges (same parent→child pair) are tracked separately.
-- Multi-parent edges are silently discarded (a child can only have one parent).
-- Cycles are detected via DFS; cyclic components return `has_cycle: true` with no depth.
-- `largest_tree_root` uses tiebreaking by lexicographic order.
+---
+
+## Validation Rules
+- Format must be `X->Y` (single uppercase letters only)
+- Self-loops like `A->A` are invalid
+- Duplicate edges tracked separately
+- Multi-parent edges silently discarded
+- Cycles detected via DFS
+
+---
+
+## Deployment
+- Backend → Vercel (root dir: `backend`)
+- Frontend → Vercel (root dir: `frontend`, env: `VITE_API_URL`)
+
+---
+
+*Built for Bajaj Finserv Health Ltd — SRM Full Stack Engineering Challenge Round 1*
