@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
+import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 /* Theme helpers*/
 const THEME_OPTIONS = [
   { key: 'light', label: 'Light', icon: '☀️' },
-  { key: 'dark', label: 'Dark', icon: '🌙' },
-  { key: 'system', label: 'System', icon: '💻' },
+  { key: 'dark', label: 'Dark', icon: '⬛' },
+  { key: 'system', label: 'System', icon: '◑' },
 ]
 
 function resolveTheme(choice) {
@@ -23,12 +24,11 @@ function TreeNode({ name, children, depth = 0 }) {
 
   let pillClass = 'node-pill '
   if (isRoot) pillClass += 'node-pill-root'
-  else if (!hasChildren) pillClass += 'node-pill-leaf'
   else pillClass += 'node-pill-inner'
 
   return (
-    <div className="tree-node" style={{ marginBottom: hasChildren ? 0 : 0 }}>
-      <div className="tree-node-row" style={{ marginBottom: hasChildren ? 6 : 4 }}>
+    <div className="tree-node">
+      <div className="tree-node-row">
         <span className={pillClass} title={`Node ${name}`}>{name}</span>
       </div>
       {hasChildren && (
@@ -49,38 +49,49 @@ function TreeNode({ name, children, depth = 0 }) {
 
 /* Hierarchy Card*/
 function HierarchyCard({ hierarchy }) {
+  const [isOpen, setIsOpen] = useState(true)
   const { root, tree, depth, has_cycle } = hierarchy
 
   return (
     <div className="hierarchy-card">
-      <div className="hierarchy-header">
+      <div className="hierarchy-header" onClick={() => setIsOpen(!isOpen)}>
         <div className="hierarchy-root-name">
           <span className="root-node-icon">{root}</span>
-          <span>Root: <strong>{root}</strong></span>
+          <span className="root-label">Root</span>
         </div>
         <div className="hierarchy-badges">
           {has_cycle ? (
-            <span className="badge badge-cycle">🔄 Cycle</span>
+            <>
+              <span className="badge badge-cycle">CYCLE</span>
+              <span className="badge badge-depth-none">no depth</span>
+            </>
           ) : (
             <>
-              <span className="badge badge-tree">🌲 Tree</span>
-              <span className="badge badge-depth">Depth {depth}</span>
+              <span className="badge badge-tree">TREE</span>
+              <span className="badge badge-depth">depth: {depth}</span>
             </>
           )}
         </div>
       </div>
-      <div className="hierarchy-body">
-        {has_cycle ? (
-          <div className="cycle-message">
-            <span>⚠️</span>
-            <span>Cycle detected — no tree structure available for this component.</span>
-          </div>
-        ) : (
-          <div className="tree-root">
-            <TreeNode name={root} children={tree} depth={0} />
-          </div>
-        )}
-      </div>
+      {isOpen && (
+        <div className="hierarchy-body">
+          {has_cycle ? (
+            <div className="cycle-message">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="cycle-icon">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21v-5h5"></path>
+              </svg>
+              <span>Cycle detected — no tree structure available for this component.</span>
+            </div>
+          ) : (
+            <div className="tree-root">
+              <TreeNode name={root} children={tree} depth={0} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -89,18 +100,17 @@ function HierarchyCard({ hierarchy }) {
 function SummaryCard({ summary }) {
   const { total_trees, total_cycles, largest_tree_root } = summary
   return (
-    <div className="card">
-      <p className="card-label">Summary</p>
+    <div className="summary-section fade-in delay-2">
       <div className="summary-grid">
-        <div className="stat-box trees">
+        <div className="stat-card trees">
           <div className="stat-value">{total_trees}</div>
-          <div className="stat-label">Total Trees 🌲</div>
+          <div className="stat-label">Total Trees</div>
         </div>
-        <div className="stat-box cycles">
+        <div className="stat-card cycles">
           <div className="stat-value">{total_cycles}</div>
-          <div className="stat-label">Total Cycles 🔄</div>
+          <div className="stat-label">Total Cycles</div>
         </div>
-        <div className="stat-box largest">
+        <div className="stat-card largest">
           <div className="stat-value">{largest_tree_root ?? '—'}</div>
           <div className="stat-label">Largest Tree Root</div>
         </div>
@@ -112,19 +122,18 @@ function SummaryCard({ summary }) {
 /* Identity Chips*/
 function IdentityCard({ data }) {
   const fields = [
-    { key: 'User ID', val: data.user_id },
-    { key: 'Email', val: data.email_id },
-    { key: 'Roll No.', val: data.college_roll_number },
+    { key: 'user_id', val: data.user_id },
+    { key: 'email_id', val: data.email_id },
+    { key: 'roll_number', val: data.college_roll_number },
   ]
   return (
-    <div className="card">
-      <p className="card-label">Identity</p>
-      <div className="identity-card">
+    <div className="identity-section fade-in">
+      <div className="identity-row">
         {fields.map(f => (
-          <span key={f.key} className="id-chip">
-            <span className="id-chip-key">{f.key}</span>
-            {f.val}
-          </span>
+          <div key={f.key} className="id-chip-wrapper">
+            <span className="id-chip-label">{f.key}</span>
+            <span className="id-chip">{f.val}</span>
+          </div>
         ))}
       </div>
     </div>
@@ -134,12 +143,15 @@ function IdentityCard({ data }) {
 /* Tag Blocks (invalid + duplicate)*/
 function TagSection({ invalidEntries, duplicateEdges }) {
   return (
-    <div className="card">
-      <div className="tag-row">
-        <div>
-          <div className="tag-block-title">⛔ Invalid Entries</div>
+    <div className="tags-section fade-in delay-3">
+      <div className="tags-grid">
+        <div className="tag-card">
+          <div className="tag-header">Invalid Entries</div>
           {invalidEntries.length === 0 ? (
-            <div className="none-msg"><span>✅</span> None</div>
+            <div className="none-msg">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              None
+            </div>
           ) : (
             <div className="chip-list">
               {invalidEntries.map((e, i) => (
@@ -148,10 +160,13 @@ function TagSection({ invalidEntries, duplicateEdges }) {
             </div>
           )}
         </div>
-        <div>
-          <div className="tag-block-title">🔁 Duplicate Edges</div>
+        <div className="tag-card">
+          <div className="tag-header">Duplicate Edges</div>
           {duplicateEdges.length === 0 ? (
-            <div className="none-msg"><span>✅</span> None</div>
+            <div className="none-msg">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              None
+            </div>
           ) : (
             <div className="chip-list">
               {duplicateEdges.map((e, i) => (
@@ -235,14 +250,20 @@ export default function App() {
 
   return (
     <div className="app-wrapper">
+      <div className="bg-mesh">
+        <div className="mesh-blob blob-1"></div>
+        <div className="mesh-blob blob-2"></div>
+        <div className="mesh-blob blob-3"></div>
+      </div>
       <div className="container">
         {/* ── Header ── */}
         <header className="app-header">
           <div className="header-left">
-            <h1 className="header-title">BFHL Node Analyzer</h1>
-            <p className="header-subtitle">Bajaj Finserv Health Ltd — Round 1</p>
+            <h1 className="header-title">BFHL<span className="header-badge">NODE ANALYZER</span></h1>
+            <p className="header-subtitle">Bajaj Finserv · Round 1</p>
           </div>
           <div className="theme-toggle-group" role="group" aria-label="Theme selection">
+            <div className="theme-toggle-slider" data-active={themeChoice}></div>
             {THEME_OPTIONS.map(opt => (
               <button
                 key={opt.key}
@@ -252,16 +273,19 @@ export default function App() {
                 aria-pressed={themeChoice === opt.key}
                 title={`Switch to ${opt.label} theme`}
               >
-                <span>{opt.icon}</span>
-                <span>{opt.label}</span>
+                <span className="theme-btn-icon">{opt.icon}</span>
+                {opt.label}
               </button>
             ))}
           </div>
         </header>
 
         {/* ── Input Card ── */}
-        <div className="card">
-          <label className="card-label" htmlFor="edge-input">Enter Node Edges</label>
+        <div className="input-card">
+          <div className="input-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            Edge Input
+          </div>
           <div className="input-section">
             <div className="textarea-wrapper">
               <textarea
@@ -271,7 +295,6 @@ export default function App() {
                 onChange={e => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="A->B, A->C, B->D, X->Y, Y->Z, Z->X"
-                rows={5}
                 aria-label="Enter node edges separated by commas or newlines"
                 spellCheck={false}
               />
@@ -286,10 +309,11 @@ export default function App() {
               disabled={loading || !inputText.trim()}
               aria-busy={loading}
             >
-              <span className="btn-inner">
-                {loading && <span className="spinner" aria-hidden="true" />}
-                {loading ? 'Analyzing…' : '⚡ Analyze Graph'}
-              </span>
+              {loading ? (
+                <span className="loading-dots">Analyzing<span>.</span><span>.</span><span>.</span></span>
+              ) : (
+                'Analyze Graph'
+              )}
             </button>
           </div>
         </div>
@@ -297,7 +321,9 @@ export default function App() {
         {/* ── Error ── */}
         {error && (
           <div className="error-box" role="alert">
-            <span className="error-icon">⛔</span>
+            <span className="error-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </span>
             <span>{error}</span>
           </div>
         )}
@@ -309,10 +335,10 @@ export default function App() {
             <IdentityCard data={result} />
 
             {/* Hierarchies */}
-            <div className="card">
-              <p className="card-label">Hierarchies ({result.hierarchies.length})</p>
+            <div className="hierarchies-section fade-in delay-1">
+              <div className="section-label">Hierarchies</div>
               {result.hierarchies.length === 0 ? (
-                <div className="empty-hierarchies">No valid edges — nothing to display.</div>
+                <div className="empty-state">No valid edges — nothing to display.</div>
               ) : (
                 <div className="hierarchy-list">
                   {result.hierarchies.map((h, i) => (
