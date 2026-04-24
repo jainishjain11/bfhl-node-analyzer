@@ -226,7 +226,7 @@ export default function App() {
       const response = await fetch(`${API_URL}/bfhl`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ edges }),
+        body: JSON.stringify({ data: edges }),
       })
 
       if (!response.ok) {

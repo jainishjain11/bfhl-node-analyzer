@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
 //POST /bfhl 
 app.post('/bfhl', (req, res) => {
-  const { edges = [] } = req.body;
+  const { data: edges = [] } = req.body;
 
   const invalid_entries = [];
   const duplicate_edges = [];
