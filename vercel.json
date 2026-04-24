@@ -9,13 +9,13 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/dist"
+        "distDir": "dist"
       }
     }
   ],
   "routes": [
     { "src": "/bfhl", "dest": "backend/index.js" },
-    { "src": "/", "dest": "backend/index.js" },
+    { "src": "/api/(.*)", "dest": "backend/index.js" },
     { "src": "/(.*)", "dest": "frontend/dist/$1" }
   ]
 }
